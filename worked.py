@@ -20,7 +20,7 @@ def main():
         "--since",
         type=str,
         required=True,
-        help="Start date in YYYY-MM-DD format from which to calculate time.",
+        help="Start date in YYYY-MM-DDThh:mm:ss format from which to calculate time.",
     )
 
     args = parser.parse_args()
@@ -44,7 +44,7 @@ def main():
 
     try:
         # Parse the input date
-        input_date = datetime.strptime(args.since, "%Y-%m-%d")
+        input_date = datetime.fromisoformat(args.since)
         current_date = datetime.now()
 
         # Calculate the number of minutes from the input date to now
