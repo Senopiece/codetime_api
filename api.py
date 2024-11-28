@@ -15,7 +15,7 @@ class CodetimeFieldType(Enum):
 
 class CodetimeItem(BaseModel):
     field: str
-    minutes: int
+    minutes: float
 
 
 class CodetimeResponseError(Exception):
