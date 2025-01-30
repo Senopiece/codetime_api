@@ -1,10 +1,12 @@
 import argparse
+import json
 import os
 import sys
 from dotenv import load_dotenv
 from pydantic import BaseModel
 import requests
 from enum import Enum
+import zlib
 
 
 class CodetimeFieldType(Enum):
@@ -42,7 +44,7 @@ class CodetimeSession:
         }
         headers = {
             "Accept": "*/*",
-            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Encoding": "gzip",
             "Accept-Language": "ru,en;q=0.9,zh;q=0.8",
             "Origin": "https://codetime.dev",
             "Referer": "https://codetime.dev/",
@@ -61,7 +63,20 @@ class CodetimeSession:
         )
 
         if response.status_code == 200:
-            return [CodetimeItem(**item) for item in response.json()]
+            try:
+                # Try to decode the response as JSON
+                data = response.json()
+                return [CodetimeItem(**item) for item in data]
+            except ValueError as e:
+                # If JSON decoding fails, try to decompress the response
+                try:
+                    decompressed_data = zlib.decompress(response.content, 16+zlib.MAX_WBITS)
+                    data = json.loads(decompressed_data)
+                    return [CodetimeItem(**item) for item in data]
+                except zlib.error as e:
+                    raise CodetimeResponseError(f"Failed to decompress response: {e}")
+                except json.JSONDecodeError as e:
+                    raise CodetimeResponseError(f"Failed to decode JSON: {e}")
         else:
             raise CodetimeResponseError(response.status_code)
 
